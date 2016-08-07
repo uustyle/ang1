@@ -21,18 +21,173 @@
     <script>
         var eS = angular.module('exampleStore', ['angularLocalStorage']);
 
-        eS.controller('MainCtrl', ['$scope', 'storage', function ( $scope, storage ) {
+        eS.controller('MainCtrl', ['$scope', 'storage', '$window', function ( $scope, storage, $window ) {
+
+
+
+angular.element($window).on('storage', function(event) {
+
+console.log("event.key",event.key);
+
+    // if (event.key === 'my-storage') {
+    //   $rootScope.$apply();
+    // }
+  });
+
+
+$window.localStorage && $window.localStorage.setItem('my-storage_k1', "val");
+
+
+
             storage.bind($scope, 'test', 'Some Default Text');
+            storage.bind($scope, 'test', 'Some Default Text');
+
+
+
+
+//scope, scopeのmappingする変数 この場合、varNameがキーとなる
+storage.bind($scope,'varName');
+
+$scope.varName = "bbb";
+
+//scope, scopeのmappingする変数,{defaultValue:設定値,storeName:キー値}
+storage.bind($scope, 'varName2', {defaultValue: 'randomValue123', storeName: 'customStoreKey'});
+
+
+// しかし、扱う側は$scope.userを扱うだけでよい。
+// storeNameを元にlocalStrageから値を取得して$scope.userとバインドしてくれる。
+var user = {email: 'hoge@example.com', name: 'hoge', age: 30};
+storage.bind($scope, 'user', {storeName: user.email, defaultValue: user});
+
+
+
+var list = [{data:"a"},{data:"b"}];
+var user2 = {email: 'arakawa@example.com', list: list};
+storage.bind($scope, 'user2', {storeName: user2.email, defaultValue: user2});
+
+
+
+
+var list3 = [{data:"a"},{data:"b"}];
+var dt3 = {
+    head:{fld1:'aaa'},
+    data:{list:list3}
+};
+
+var user3 = {email: 'arakawa3@example.com', dt3: dt3};
+storage.bind($scope, 'user3', {storeName: user3.email, defaultValue: user3});
+
+
+
+
+window.addEventListener("storage", function (event) {
+
+    var oldValue = event.oldValue;
+    var newValue = event.newValue;
+    var storageArea = event.storageArea;
+
+    console.log("addEventListener", event)
+
+    if( oldValue === null && newValue !== null){
+
+        console.log( "type : add" );
+
+    }else if( oldValue !== null && newValue === null){
+
+        console.log( "type : remove" );
+
+    }else if( oldValue !== null && newValue !== null){
+
+        console.log( "type : update" );
+
+    }else if( oldValue === null && newValue === null && storageArea.length === 0){
+
+        console.log( "type : clear" );
+
+    }
+});
+
+
+
+
+
+
+var lsKeys = storage.getKeys();
+console.log("lsKeys",lsKeys);
 
             $scope.clearTest = function () {
                 storage.remove('test');
             };
+
+
+            $scope.resetTest = function () {
+
+console.log("storage.get",storage.get(user2.email));
+
+// storage.remove(user2.email);
+var list2 = [{data:"c"},{data:"d"}];
+var dt = storage.get(user2.email);
+console.log("dt前",dt);
+
+// dt.list = list2;
+
+$scope.user2.list.push(list2);
+
+console.log("dt後",dt);
+
+storage.bind($scope, 'user2', {storeName: dt.email, defaultValue: dt});
+
+            };
+
+
+
+           $scope.resetTest1 = function () {
+
+console.log("storage.get",storage.get(user2.email));
+
+// storage.remove(user2.email);
+var list2 = [{data:"c"},{data:"d"}];
+var dt = storage.get(user3.email);
+console.log("dt前",dt);
+
+// dt.list = list2;
+
+// $scope.user3.dt3.data.list.push(list2);
+$scope.user3.list = [];
+$scope.user3.list.push(list2);
+
+console.log("dt後",dt);
+
+storage.bind($scope, 'user3', {storeName: dt.email, defaultValue: dt});
+
+            };
+
+
+
+
+
+
+            $scope.resetTest2 = function () {
+
+var list = {data:"c"};
+// $scope.user2.list.push(list);
+$scope.user2.list=list;
+
+            };
+
+
+
+
+
         }]);
     </script>
 </head>
 <body>
 <div ng-app="exampleStore">
     <div ng-controller="MainCtrl">
+
+{{user.email}}
+
         <div class="hero">
             <h1>the simplest localStorage implementation, <b>ever</b></h1>
             <h3>angular localStorage module</h3>
@@ -46,7 +201,13 @@
             <div class="large-4 columns">
                 <p>Variable: <b>{{test}}</b></p>
                 <label>localStorage variable value:</label> <input type="text" ng-model="test">
-                <a ng-click="clearTest()">Clear Value from LC</a>
+                <a ng-click="clearTest()">Clear Value from LC</a><br/>
+
+                <a ng-click="resetTest()">resetTest</a><br/>
+                <a ng-click="resetTest1()">resetTest1</a><br/>
+
+
+                <a ng-click="resetTest2()">resetTest2</a><br/>
 
                 <p style="font-size: 12px;"><i>Change the value in the textbox and refresh the page!</i></p>
             </div>
